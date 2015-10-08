@@ -1,13 +1,10 @@
-/*global require, module*/
-'use strict';
+import Drawer from './src/js/Drawer';
 
-var Drawer = require('./src/js/Drawer');
+export default Drawer;
 
-var constructAll = function () {
+const constructAll = () => {
 	Drawer.init();
 	document.removeEventListener('o.DOMContentLoaded', constructAll);
 };
 
 document.addEventListener('o.DOMContentLoaded', constructAll);
-
-module.exports = Drawer;

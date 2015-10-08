@@ -1,79 +1,117 @@
-/* jshint -W079 */
+import DomDelegate from 'dom-delegate';
+import { dispatchEvent } from './utils';
 
-'use strict';
+export default class Drawer {
 
-var DomDelegate = require('dom-delegate');
-var WeakMap = require('o-weakmap');
-
-var dispatchEvent = function(element, name, data) {
-	if (document.createEvent && element.dispatchEvent) {
-		var event = document.createEvent('Event');
-		event.initEvent(name, true, true);
-
-		if (data) {
-			event.detail = data;
+	constructor(el) {
+		if (!el) {
+			throw new TypeError('missing required argument: element');
+		}
+		if (typeof el === 'string') {
+			el = document.querySelector(el);
 		}
 
-		element.dispatchEvent(event);
-	}
-};
+		const triggerSelector =
+			'[data-toggle="o-drawer"][href="#' + el.id + '"],' +
+			'[data-toggle="o-drawer"][data-target="#' + el.id + '"]';
 
-function Drawer(el){
-	if (!(this instanceof Drawer)){
-		throw new TypeError('Constructor Drawer requires \'new\'');
-	}
-	if (!el){
-		throw new TypeError('missing required argument: element');
-	}
-	if(typeof el === 'string'){
-		el = document.querySelector(el);
-	}
+		this.target = el;
+		this.trigger = document.querySelectorAll(triggerSelector);
+		Drawer.cache.set(el, this);
 
-	var triggerSelector =
-		'[data-toggle="o-drawer"][href="#' + el.id + '"],' +
-		'[data-toggle="o-drawer"][data-target="#' + el.id + '"]';
+		this.target.classList.add('o-drawer');
 
-	this.target = el;
-	this.trigger = document.querySelectorAll(triggerSelector);
-	Drawer.cache.set(el, this);
+		const hasAlignmentClass = this.target.classList.contains('o-drawer-left') ||
+			this.target.classList.contains('o-drawer-right');
 
-	this.target.classList.add('o-drawer');
+		if (!hasAlignmentClass) {
+			this.target.classList.add('o-drawer-left');
+		}
 
-	var hasAlignmentClass = this.target.classList.contains('o-drawer-left') ||
-		this.target.classList.contains('o-drawer-right');
+		this.target.setAttribute('aria-expanded', false);
 
-	if(!hasAlignmentClass){
-		this.target.classList.add('o-drawer-left');
-	}
-	this.target.setAttribute('aria-expanded', false);
+		if (!Drawer.delegate) {
+			const delegate = new DomDelegate(document.body);
 
-	if(!Drawer.delegate){
-		var delegate = new DomDelegate(document.body);
-		delegate.on('click', '[data-toggle="o-drawer"], [data-close="o-drawer"], [data-open="o-drawer"]', function handleClick(e) {
-			e.preventDefault();
+			delegate.on('click', '[data-toggle="o-drawer"], [data-close="o-drawer"], [data-open="o-drawer"]', (e) => {
+				e.preventDefault();
 
+				const trigger = getTrigger(e.target);
+				const target = getTargetFromTrigger(trigger);
 
-			var trigger = getTrigger(e.target);
-			var target = getTargetFromTrigger(trigger);
+				for (let i=0, l = target.length; i<l; i++) {
+					const t = target[i];
+					let drawer = Drawer.cache.get(t);
 
-			for(var i=0, l = target.length; i<l; i++){
-				var t = target[i];
-				var drawer = Drawer.cache.get(t);
+					if (!drawer && t.getAttribute('data-o-component') === 'o-collapse') {
+						drawer = new Drawer(t);
+					}
 
-				if (!drawer && t.getAttribute('data-o-component') === 'o-collapse') {
-					drawer = new Drawer(t);
+					if (drawer) {
+						const action = openCloseToggle(trigger);
+						drawer[action]();
+					}
 				}
+			});
 
-				if (drawer) {
-					var action = openCloseToggle(trigger);
-					drawer[action]();
-				}
-			}
-		});
-		Drawer.delegate = delegate;
+			Drawer.delegate = delegate;
+		}
 	}
 
-	return this;
+	/**
+	 * Opens the Drawer
+	 * @return {Drawer} self, for chainability
+	 */
+	open() {
+		this.target.style.display = 'block';
+		const t = this.target;
+		setTimeout(function () {
+			t.classList.add('o-drawer-open');
+			t.setAttribute('aria-expanded', true);
+		}, 50);
+
+		dispatchEvent(this.target, 'oDrawer.open');
+
+		return this;
+	}
+
+	/**
+	 * Closes the Drawer
+	 * @return {Drawer} self, for chainability
+	 */
+	close() {
+		this.target.classList.remove('o-drawer-open');
+		this.target.setAttribute('aria-expanded', true);
+		dispatchEvent(this.target, 'oDrawer.close');
+
+		if (this.target.classList.contains('o-drawer-animated')) {
+			const t = this.target;
+			setTimeout(function(){
+				t.style.display = 'none';
+			}, 400);
+		} else {
+			this.target.style.display = 'none';
+		}
+
+		return this;
+	}
+
+	/**
+	 * Toggles the Drawer based on its current state
+	 * @return {Drawer} self, for chainability
+	 */
+	toggle() {
+		const visible = this.target.classList.contains('o-drawer-open');
+
+		if (visible) {
+			this.close();
+		} else {
+			this.open();
+		}
+
+		return this;
+	}
+
 }
 
 Drawer.cache = new WeakMap();
@@ -85,11 +123,11 @@ Drawer.cache = new WeakMap();
  * @return {DropdownMenu[]} List of Drawer instances that
  * have been initialized.
  */
-Drawer.init = function(element){
-	var drawerEls = selectAll(element);
-	var drawers = [];
+Drawer.init = (element) => {
+	const drawerEls = selectAll(element);
+	const drawers = [];
 
-	for(var i = 0, l = drawerEls.length; i < l; i++){
+	for (let i = 0, l = drawerEls.length; i < l; i++){
 		drawers.push(new Drawer(drawerEls[i]));
 	}
 
@@ -97,72 +135,20 @@ Drawer.init = function(element){
 };
 
 /**
- * Destroy all Drawer Components on the page
+ * Destroys all Drawer Components on the page
+ * @return {undefined} undefined
  */
-Drawer.destroy = function () {
+Drawer.destroy = () => {
 	if (Drawer.bodyDelegate) {
 		Drawer.bodyDelegate.destroy();
 	}
 };
 
-/**
- * Opens the Drawer
- * @return {Drawer} self, for chainability
- */
-
-Drawer.prototype.open = function(){
-	this.target.style.display = 'block';
-	var t= this.target;
-	setTimeout(function(){
-		t.classList.add('o-drawer-open');
-		t.setAttribute('aria-expanded', true);
-	}, 50);
-
-	dispatchEvent(this.target, 'oDrawer.open');
-	return this;
-};
-
-/**
-* Closes the Drawer
-* @return {Drawer} self, for chainability
-*/
-
-Drawer.prototype.close = function(){
-	this.target.classList.remove('o-drawer-open');
-	this.target.setAttribute('aria-expanded', true);
-	dispatchEvent(this.target, 'oDrawer.close');
-	if(this.target.classList.contains('o-drawer-animated')){
-		var t = this.target;
-		setTimeout(function(){
-			t.style.display = 'none';
-		}, 400);
-	}else{
-		this.target.style.display = 'none';
-	}
-	return this;
-};
-
-/**
-* Toggles the Drawer
-* @return {Drawer} self, for chainability
-*/
-
-Drawer.prototype.toggle = function(){
-	var visible = this.target.classList.contains('o-drawer-open');
-	if(visible){
-		this.close();
-	}
-	else{
-		this.open();
-	}
-	return this;
-};
-
-function selectAll(element){
-	if(!element){
+function selectAll(element) {
+	if (!element) {
 		element = document.body;
 	}
-	else if(!(element instanceof HTMLElement)){
+	else if (!(element instanceof HTMLElement)) {
 		element = document.querySelectorAll(element)[0];
 	}
 
@@ -170,17 +156,18 @@ function selectAll(element){
 }
 
 function openCloseToggle(el) {
-	if(el){
-		if(el.getAttribute('data-toggle') === 'o-drawer'){
+	if (el) {
+		if (el.getAttribute('data-toggle') === 'o-drawer') {
 			return 'toggle';
 		}
-		else if(el.getAttribute('data-close') === 'o-drawer'){
+		else if (el.getAttribute('data-close') === 'o-drawer') {
 			return 'close';
 		}
-		else if(el.getAttribute('data-open') === 'o-drawer'){
+		else if (el.getAttribute('data-open') === 'o-drawer') {
 			return 'open';
 		}
 	}
+
 	return false;
 }
 
@@ -195,8 +182,6 @@ function getTrigger(element) {
 }
 
 function getTargetFromTrigger(element) {
-	var target = element.getAttribute('data-target') || element.getAttribute('href');
+	const target = element.getAttribute('data-target') || element.getAttribute('href');
 	return document.querySelectorAll(target);
 }
-
-module.exports = Drawer;

@@ -1,77 +1,64 @@
 /*global describe, it, before, after*/
-'use strict';
 
-var expect = require('expect.js');
+import expect from 'expect.js';
+import Drawer from './../src/js/Drawer';
+import { isExpanded } from './helpers';
 
-var Drawer = require('./../src/js/Drawer');
+describe('Drawer', () => {
 
-function isExpanded(element) {
-	return element.classList.contains('o-drawer-open') &&
-		element.getAttribute('aria-expanded') === 'true';
-}
-
-describe('Drawer', function() {
-
-	it('should initialise', function() {
+	it('should initialise', () => {
 		expect(new Drawer(document.body)).to.not.be(undefined);
 	});
 
-	it('should throw when called without \'new\'', function () {
-		expect(function () { Drawer(); }).to.throwException(function (e) { // jshint ignore:line
-			expect(e).to.be.a(TypeError);
-			expect(e.message).to.match(/Constructor Drawer requires \'new\'/);
-		});
-	});
-
-	it('should throw when no arguments are provided', function () {
-		expect(function () { new Drawer(); }).to.throwException(function (e) {
+	it('should throw when no arguments are provided', () => {
+		expect(() => new Drawer()).to.throwException(function (e) {
 			expect(e).to.be.a(TypeError);
 			expect(e.message).to.match(/missing required argument/);
 		});
 	});
 
-	it('should accept a string argument', function () {
+	it('should accept a string argument', () => {
 		new Drawer('body');
 	});
 
-	describe('Drawer.init()', function(){
-		before(function () {
-			var element1 = document.createElement('div');
+	describe('Drawer.init()', () =>{
+		before(() => {
+			const element1 = document.createElement('div');
 			element1.setAttribute('data-o-component', 'o-drawer');
 			document.body.appendChild(element1);
 
-			var element2 = document.createElement('div');
+			const element2 = document.createElement('div');
 			element2.setAttribute('data-o-component', 'o-drawer');
 			document.body.appendChild(element2);
 		});
 
-		it('should init all drawer elements', function () {
-			var drawers = Drawer.init();
+		it('should init all drawer elements', () => {
+			const drawers = Drawer.init();
 			expect(drawers.length).to.be(2);
 		});
 
-		it('should work when element is a selector', function () {
-			var drawers = Drawer.init('body');
+		it('should work when element is a selector', () => {
+			const drawers = Drawer.init('body');
 			expect(drawers.length).to.be(2);
 		});
 	});
 
-	describe('Drawer.destroy()', function () {
+	describe('Drawer.destroy()', () => {
 
-		var bodyDelegate;
+		let bodyDelegate;
 
-		before(function () {
+		before(() => {
 			bodyDelegate = Drawer.bodyDelegate;
 		});
 
-		after(function () {
+		after(() => {
 			Drawer.bodyDelegate = bodyDelegate;
 		});
 
-		it('should destroy', function () {
-			var destroyed = false;
+		it('should destroy', () => {
+			let destroyed = false;
 			Drawer.bodyDelegate = {
-				destroy: function () { destroyed = true; }
+				destroy: () => { destroyed = true; }
 			};
 
 			Drawer.destroy();
@@ -83,16 +70,16 @@ describe('Drawer', function() {
 
 
 	describe('open()', function(done) {
-		it('should show the element', function () {
-			var element = document.createElement('div');
+		it('should show the element', () => {
+			const element = document.createElement('div');
 			document.body.appendChild(element);
 
-			var drawer = new Drawer(element);
+			const drawer = new Drawer(element);
 
 			expect(isExpanded(element)).to.be(false);
 
 			drawer.open();
-			setTimeout(function(){
+			setTimeout(() =>{
 				expect(isExpanded(element)).to.be(true);
 				done();
 			}, 100);
@@ -100,10 +87,10 @@ describe('Drawer', function() {
 		});
 
 		it('should emit oDrawer.open', function (done) {
-			var element = document.createElement('div');
+			const element = document.createElement('div');
 			document.body.appendChild(element);
 
-			var drawer = new Drawer(element);
+			const drawer = new Drawer(element);
 
 			element.addEventListener('oDrawer.open', function (e) {
 				expect(e.target).to.be(element);
@@ -114,12 +101,12 @@ describe('Drawer', function() {
 		});
 	});
 
-	describe('close()', function() {
-		it('should hide the element', function () {
-			var element = document.createElement('div');
+	describe('close()', () => {
+		it('should hide the element', () => {
+			const element = document.createElement('div');
 			document.body.appendChild(element);
 
-			var drawer = new Drawer(element);
+			const drawer = new Drawer(element);
 			drawer.open();
 			drawer.close();
 
@@ -127,10 +114,10 @@ describe('Drawer', function() {
 		});
 
 		it('should emit oDrawer.close', function (done) {
-			var element = document.createElement('div');
+			const element = document.createElement('div');
 			document.body.appendChild(element);
 
-			var drawer = new Drawer(element);
+			const drawer = new Drawer(element);
 
 			element.addEventListener('oDrawer.close', function (e) {
 				expect(e.target).to.be(element);
@@ -142,13 +129,13 @@ describe('Drawer', function() {
 	});
 
 	describe('toggle()', function(done) {
-		it('should toggle the element open and close', function () {
-			var element = document.createElement('div');
+		it('should toggle the element open and close', () => {
+			const element = document.createElement('div');
 			document.body.appendChild(element);
 
-			var drawer = new Drawer(element);
+			const drawer = new Drawer(element);
 			drawer.toggle();
-			setTimeout(function(){
+			setTimeout(() =>{
 				expect(isExpanded(element)).to.be(true);
 				drawer.toggle();
 				expect(isExpanded(element)).to.be(false);
