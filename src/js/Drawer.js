@@ -1,5 +1,8 @@
 import DomDelegate from 'dom-delegate';
+import componentHandler from 'o-component-handler';
 import { dispatchEvent } from './utils';
+
+const CSS_CLASS = 'o-drawer';
 
 export default class Drawer {
 
@@ -17,15 +20,14 @@ export default class Drawer {
 
 		this.target = el;
 		this.trigger = document.querySelectorAll(triggerSelector);
-		Drawer.cache.set(el, this);
 
-		this.target.classList.add('o-drawer');
+		this.target.classList.add(CSS_CLASS);
 
-		const hasAlignmentClass = this.target.classList.contains('o-drawer-left') ||
-			this.target.classList.contains('o-drawer-right');
+		const hasAlignmentClass = this.target.classList.contains(`${CSS_CLASS}-left`) ||
+			this.target.classList.contains(`${CSS_CLASS}-right`);
 
 		if (!hasAlignmentClass) {
-			this.target.classList.add('o-drawer-left');
+			this.target.classList.add(`${CSS_CLASS}-left`);
 		}
 
 		this.target.setAttribute('aria-expanded', false);
@@ -41,11 +43,7 @@ export default class Drawer {
 
 				for (let i=0, l = target.length; i<l; i++) {
 					const t = target[i];
-					let drawer = Drawer.cache.get(t);
-
-					if (!drawer && t.getAttribute('data-o-component') === 'o-collapse') {
-						drawer = new Drawer(t);
-					}
+					const drawer = getOrCreateInstance(t);
 
 					if (drawer) {
 						const action = openCloseToggle(trigger);
@@ -66,7 +64,7 @@ export default class Drawer {
 		this.target.style.display = 'block';
 		const t = this.target;
 		setTimeout(function () {
-			t.classList.add('o-drawer-open');
+			t.classList.add(`${CSS_CLASS}-open`);
 			t.setAttribute('aria-expanded', true);
 		}, 50);
 
@@ -80,11 +78,11 @@ export default class Drawer {
 	 * @return {Drawer} self, for chainability
 	 */
 	close() {
-		this.target.classList.remove('o-drawer-open');
+		this.target.classList.remove(`${CSS_CLASS}-open`);
 		this.target.setAttribute('aria-expanded', true);
 		dispatchEvent(this.target, 'oDrawer.close');
 
-		if (this.target.classList.contains('o-drawer-animated')) {
+		if (this.target.classList.contains(`${CSS_CLASS}-animated`)) {
 			const t = this.target;
 			setTimeout(function(){
 				t.style.display = 'none';
@@ -101,7 +99,7 @@ export default class Drawer {
 	 * @return {Drawer} self, for chainability
 	 */
 	toggle() {
-		const visible = this.target.classList.contains('o-drawer-open');
+		const visible = this.target.classList.contains(`${CSS_CLASS}-open`);
 
 		if (visible) {
 			this.close();
@@ -114,25 +112,6 @@ export default class Drawer {
 
 }
 
-Drawer.cache = new WeakMap();
-
-/**
- * Initializes all drawer elements on the page or within
- * the element passed in.
- * @param	{HTMLElement|string} element DOM element or selector.
- * @return {DropdownMenu[]} List of Drawer instances that
- * have been initialized.
- */
-Drawer.init = (element) => {
-	const drawerEls = selectAll(element);
-	const drawers = [];
-
-	for (let i = 0, l = drawerEls.length; i < l; i++){
-		drawers.push(new Drawer(drawerEls[i]));
-	}
-
-	return drawers;
-};
 
 /**
  * Destroys all Drawer Components on the page
@@ -144,16 +123,20 @@ Drawer.destroy = () => {
 	}
 };
 
-function selectAll(element) {
-	if (!element) {
-		element = document.body;
-	}
-	else if (!(element instanceof HTMLElement)) {
-		element = document.querySelectorAll(element)[0];
-	}
 
-	return element.querySelectorAll('[data-o-component="o-drawer"]');
-}
+/**
+ * Register this component with the component handler.
+ */
+componentHandler.register({
+	constructor: Drawer,
+	classAsString: 'Drawer',
+	cssClass: CSS_CLASS
+});
+
+
+/**
+ * Private
+ */
 
 function openCloseToggle(el) {
 	if (el) {
@@ -184,4 +167,15 @@ function getTrigger(element) {
 function getTargetFromTrigger(element) {
 	const target = element.getAttribute('data-target') || element.getAttribute('href');
 	return document.querySelectorAll(target);
+}
+
+function getOrCreateInstance(element) {
+	let instance = componentHandler.getInstance(element, CSS_CLASS);
+
+	if (!instance && element.classList.contains(CSS_CLASS)) {
+		componentHandler.upgradeElement(element, 'Drawer');
+		instance = componentHandler.getInstance(element, CSS_CLASS);
+	}
+
+	return instance;
 }

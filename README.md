@@ -2,12 +2,12 @@
 
 ## Quick start
 
-Add `data-o-component="o-drawer"` to the target element to enable drawer. You can use a link with `href` or a button with `data-target` as the trigger:
+Add `class="o-drawer"` to the target element to enable drawer. You can use a link with `href` or a button with `data-target` as the trigger:
 
 ```html
 <a href="#drawer-example" data-toggle="o-drawer">Link trigger</a>
 <button data-toggle="o-drawer" data-target="#drawer-example">Button trigger</button>
-<div id="drawer-example" class="o-drawer-right o-drawer-animated" data-o-component="o-drawer">Quisque in tortor finibus, dictum sem vel, convallis felis. Nunc ac mi in urna euismod eleifend in vitae augue. Suspendisse blandit feugiat vulputate. Praesent sit amet fringilla eros. Mauris nunc nisl, laoreet sit amet molestie vitae, sodales et diam.</div>
+<div id="drawer-example" class="o-drawer o-drawer-right o-drawer-animated">Quisque in tortor finibus, dictum sem vel, convallis felis. Nunc ac mi in urna euismod eleifend in vitae augue. Suspendisse blandit feugiat vulputate. Praesent sit amet fringilla eros. Mauris nunc nisl, laoreet sit amet molestie vitae, sodales et diam.</div>
 ```
 
 ## Enabling using JavaScript

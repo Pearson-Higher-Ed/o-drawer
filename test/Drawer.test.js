@@ -6,7 +6,7 @@ import { isExpanded } from './helpers';
 
 describe('Drawer', () => {
 
-	it('should initialise', () => {
+	it('should initialize', () => {
 		expect(new Drawer(document.body)).to.not.be(undefined);
 	});
 
@@ -19,28 +19,6 @@ describe('Drawer', () => {
 
 	it('should accept a string argument', () => {
 		new Drawer('body');
-	});
-
-	describe('Drawer.init()', () =>{
-		before(() => {
-			const element1 = document.createElement('div');
-			element1.setAttribute('data-o-component', 'o-drawer');
-			document.body.appendChild(element1);
-
-			const element2 = document.createElement('div');
-			element2.setAttribute('data-o-component', 'o-drawer');
-			document.body.appendChild(element2);
-		});
-
-		it('should init all drawer elements', () => {
-			const drawers = Drawer.init();
-			expect(drawers.length).to.be(2);
-		});
-
-		it('should work when element is a selector', () => {
-			const drawers = Drawer.init('body');
-			expect(drawers.length).to.be(2);
-		});
 	});
 
 	describe('Drawer.destroy()', () => {
@@ -67,7 +45,6 @@ describe('Drawer', () => {
 		});
 
 	});
-
 
 	describe('open()', function(done) {
 		it('should show the element', () => {
