@@ -6,3 +6,7 @@
 $o-drawer-z-index: 2499 !default;
 $o-drawer-width: 332px !default;
 $o-drawer-bg: #ffffff !default;
+$o-drawer-offset-top: 0px !default;
+
+// Width at which the drawer expands to fill the viewport
+$o-drawer-breakpoint: 415px !default;

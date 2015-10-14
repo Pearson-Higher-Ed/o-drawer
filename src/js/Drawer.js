@@ -23,11 +23,11 @@ export default class Drawer {
 
 		this.target.classList.add(CSS_CLASS);
 
-		const hasAlignmentClass = this.target.classList.contains(`${CSS_CLASS}-left`) ||
-			this.target.classList.contains(`${CSS_CLASS}-right`);
+		const hasAlignmentClass = this.target.classList.contains(`${CSS_CLASS}--left`) ||
+			this.target.classList.contains(`${CSS_CLASS}--right`);
 
 		if (!hasAlignmentClass) {
-			this.target.classList.add(`${CSS_CLASS}-left`);
+			this.target.classList.add(`${CSS_CLASS}--left`);
 		}
 
 		this.target.setAttribute('aria-expanded', false);
@@ -64,7 +64,7 @@ export default class Drawer {
 		this.target.style.display = 'block';
 		const t = this.target;
 		setTimeout(function () {
-			t.classList.add(`${CSS_CLASS}-open`);
+			t.classList.add(`${CSS_CLASS}--open`);
 			t.setAttribute('aria-expanded', true);
 		}, 50);
 
@@ -78,11 +78,11 @@ export default class Drawer {
 	 * @return {Drawer} self, for chainability
 	 */
 	close() {
-		this.target.classList.remove(`${CSS_CLASS}-open`);
+		this.target.classList.remove(`${CSS_CLASS}--open`);
 		this.target.setAttribute('aria-expanded', true);
 		dispatchEvent(this.target, 'oDrawer.close');
 
-		if (this.target.classList.contains(`${CSS_CLASS}-animated`)) {
+		if (this.target.classList.contains(`${CSS_CLASS}--animated`)) {
 			const t = this.target;
 			setTimeout(function(){
 				t.style.display = 'none';
@@ -99,7 +99,7 @@ export default class Drawer {
 	 * @return {Drawer} self, for chainability
 	 */
 	toggle() {
-		const visible = this.target.classList.contains(`${CSS_CLASS}-open`);
+		const visible = this.target.classList.contains(`${CSS_CLASS}--open`);
 
 		if (visible) {
 			this.close();
